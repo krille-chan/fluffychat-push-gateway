@@ -1,8 +1,16 @@
-var app = require("http");
-var request = require('request')
+const app = require("https");
+const request = require('request');
+const fs = require('fs');
 
-app.createServer(
+const options = {
+  key: fs.readFileSync('//etc/letsencrypt/live/janian.de/privkey.pem'),
+  cert: fs.readFileSync('//etc/letsencrypt/live/janian.de/fullchain.pem'),
+};
+
+app.createServer( options,
     function (req, res) {
+res.writeHead(200);
+  res.end("Fluffychat Push-Gateway");
         if (req.method == 'POST') {
             var jsonString = '';
 
