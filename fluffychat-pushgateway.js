@@ -21,6 +21,7 @@ res.writeHead(200);
             req.on('end', function () {
                 notification = JSON.parse(jsonString).notification;
                 console.log("New Notification!");
+		//console.log(JSON.parse(jsonString), notification.devices);
 
                 var approxExpire = new Date ();
                 approxExpire.setUTCMinutes(approxExpire.getUTCMinutes()+10);
@@ -28,10 +29,13 @@ res.writeHead(200);
                 var devices = notification.devices;
                 for ( var i = 0; i < devices.length; i++ ) {
 
+		// Workaround for wrong appid:
+		if ( devices[i].app_id === "fluffychat.christianpauly_hello" ) devices[i].app_id = "fluffychat.christianpauly_fluffychat";
+
                     if ( devices[i].app_id === "fluffychat.christianpauly_fluffychat" && notification.type === "m.room.message" ) {
 			var room = notification.room_name || notification.sender_display_name || notification.sender;
                         data = {
-                            "appid" : devices[i].app_id,
+                            "appid" : "fluffychat.christianpauly_fluffychat",
                             "expire_on": approxExpire.toISOString(),
                             "token": devices[i].pushkey,
                             "clear_pending": true,
@@ -46,6 +50,7 @@ res.writeHead(200);
 					"persist": true,
                                         "popup": true
                                     },
+
 					"sound": true,
                                     "tag": room,
                                     "vibrate": true,
@@ -55,8 +60,9 @@ res.writeHead(200);
                                     }
                                 }
                             }
-                	
+
                         };
+			console.log(data);
                         console.log("sending to " + devices[i].app_id)
                         request.post("https://push.ubports.com/notify", {json: data}, function(err,res,body) {console.log(body)});
                     }
@@ -66,4 +72,3 @@ res.writeHead(200);
         }
     }
 ).listen(7000);
-
