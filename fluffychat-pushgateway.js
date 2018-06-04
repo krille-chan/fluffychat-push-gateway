@@ -20,8 +20,7 @@ res.writeHead(200);
 
             req.on('end', function () {
                 notification = JSON.parse(jsonString).notification;
-                console.log("New Notification!");
-		//console.log(JSON.parse(jsonString), notification.devices);
+                console.log("New Notification received at: " + new Date());
 
                 var approxExpire = new Date ();
                 approxExpire.setUTCMinutes(approxExpire.getUTCMinutes()+10);
@@ -35,7 +34,7 @@ res.writeHead(200);
                     if ( devices[i].app_id === "fluffychat.christianpauly_fluffychat" && notification.type === "m.room.message" ) {
 			var room = notification.room_name || notification.sender_display_name || notification.sender;
                         data = {
-                            "appid" : "fluffychat.christianpauly_fluffychat",
+                            "appid" : devices[i].app_id,
                             "expire_on": approxExpire.toISOString(),
                             "token": devices[i].pushkey,
                             "clear_pending": true,
@@ -44,7 +43,7 @@ res.writeHead(200);
                                 "message": "New Message",
                                 "notification": {
                                     "card": {
-					"action": "appid://" + devices[i].app_id,
+					"action": "application:///fluffychat.desktop",
                                         "summary": notification.room_name || notification.sender_display_name || notification.sender,
                                         "body": notification.content ? notification.content.body : "New secret Message",
 					"persist": true,
@@ -62,8 +61,6 @@ res.writeHead(200);
                             }
 
                         };
-			console.log(data);
-                        console.log("sending to " + devices[i].app_id)
                         request.post("https://push.ubports.com/notify", {json: data}, function(err,res,body) {console.log(body)});
                     }
                 }
