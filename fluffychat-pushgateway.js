@@ -9,6 +9,9 @@ const options = {
 
 app.createServer( options,
     function (req, res) {
+        res.writeHead(200, {"Content-Type": "application/json"});
+        res.write('{"rejected": []}');
+        res.end ();
         if (req.method == 'POST') {
             var jsonString = '';
 
@@ -32,8 +35,11 @@ app.createServer( options,
                     var localPushKey = devices[i].pushkey;
 
                     if ( devices[i].app_id === "fluffychat.christianpauly_fluffychat" ) {
+                        var sender = notification.sender_display_name || notification.sender || ""
                         var room = notification.room_name || notification.sender_display_name || notification.sender || "";
-                        console.log ( room );
+                        var body = notification.content ? notification.content.body : "New secret Message"
+                        if ( room !== sender ) body = sender + ": " + body
+
                         var isMessage = notification.type === "m.room.message"
 
                         var notifydata = {
@@ -59,23 +65,19 @@ app.createServer( options,
                         if ( isMessage ) notifydata.data.notification.card = {
                             "action": "application:///fluffychat.desktop",
                             "summary": notification.room_name || notification.sender_display_name || notification.sender,
-                            "body": notification.content ? notification.content.body : "New secret Message",
+                            "body": body,
                             "persist": true,
                             "popup": true
                         };
                         request.post("https://push.ubports.com/notify", {json: notifydata}, function(err,res,body) {
                             rejected.push(localPushKey);
                             //res.writeHead(200);
-                            //res.end(rejected);
+                            //res.end();
                         });
                     }
                 }
 
             });
         }
-        else {
-            res.writeHead(200);
-            res.end("Fluffychat Push-Gateway");
-        }
     }
-).listen(7001);
+).listen(7000);
