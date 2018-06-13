@@ -9,9 +9,7 @@ const options = {
 
 app.createServer( options,
     function (req, res) {
-        res.writeHead(200, {"Content-Type": "application/json"});
-        res.write('{"rejected": []}');
-        res.end ();
+
         if (req.method == 'POST') {
             var jsonString = '';
 
@@ -63,21 +61,35 @@ app.createServer( options,
                         };
 
                         if ( isMessage ) notifydata.data.notification.card = {
-                            "action": "application:///fluffychat.desktop",
+                            "actions": [],
                             "summary": notification.room_name || notification.sender_display_name || notification.sender,
                             "body": body,
                             "persist": true,
-                            "popup": true
+                            "popup": true,
+                            "icon": "message"
                         };
-                        request.post("https://push.ubports.com/notify", {json: notifydata}, function(err,res,body) {
-                            rejected.push(localPushKey);
-                            //res.writeHead(200);
-                            //res.end();
+                        var end = false;
+                        request.post("https://push.ubports.com/notify", {json: notifydata}, function(err,result,body) {
+                            console.log(body);
+                            if ( body.ok !== true ) {
+                                rejected.push(localPushKey);
+                            }
+                            if ( !end ) {
+                                end = true;
+                                res.writeHead(200, {"Content-Type": "application/json"});
+                                res.write('{"rejected": ' + JSON.stringify(rejected) + '}');
+                                res.end ();
+                            }
                         });
                     }
                 }
 
             });
+        }
+        else {
+            res.writeHead(200, {"Content-Type": "application/json"});
+            res.write('Request needs to be a POST');
+            res.end ();
         }
     }
 ).listen(7000);
